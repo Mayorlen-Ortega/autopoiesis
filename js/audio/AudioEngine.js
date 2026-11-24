@@ -60,11 +60,13 @@ export class AudioEngine {
       listener.setOrientation(0, 0, -1, 0, 1, 0);
     }
 
-    // Master Bus con limitador suave y rampa inicial
+    // Master Bus con limitador suave y rampa inicial desde mínimo absoluto
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.setValueAtTime(0.0001, now);
-    // Entrada gradual inicial (0.5s) para higiene acústica total (cero clics)
-    this.masterGain.gain.exponentialRampToValueAtTime(0.92, now + 0.6);
+    // Entrada gradual orgánica y progresiva desde el silencio (0s -> 7.0s)
+    this.masterGain.gain.exponentialRampToValueAtTime(0.20, now + 2.0);
+    this.masterGain.gain.exponentialRampToValueAtTime(0.58, now + 5.0);
+    this.masterGain.gain.linearRampToValueAtTime(0.92, now + 8.0);
 
     // Bus del Plano Interior (Sistema / Identidad)
     this.systemBus = this.ctx.createGain();
@@ -98,15 +100,15 @@ export class AudioEngine {
   }
 
   /**
-   * Crea un PannerNode configurado rigurosamente con HRTF y caída inversa.
+   * Crea un PannerNode configurado rigurosamente con HRTF y caída acentuada para 8D extremo.
    */
   createHRTFPanner(initialX = 0, initialY = 0, initialZ = -1) {
     const panner = new PannerNode(this.ctx, {
       panningModel: 'HRTF',
       distanceModel: 'inverse',
-      refDistance: 1.2,
-      maxDistance: 100,
-      rolloffFactor: 1.1,
+      refDistance: 0.8,    // Distancia de referencia reducida para mayor dramatismo de proximidad
+      maxDistance: 120,
+      rolloffFactor: 1.8,  // Caída más pronunciada que acentúa la localización espacial 360°
       coneInnerAngle: 360,
       coneOuterAngle: 360,
       coneOuterGain: 0,

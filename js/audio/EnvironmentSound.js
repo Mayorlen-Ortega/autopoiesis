@@ -31,16 +31,16 @@ export class EnvironmentSound {
 
     this._generateNoiseBuffer();
 
-    // 4 Emisores 8D espaciales distribuidos en el espacio tridimensional
+    // 4 Emisores 8D espaciales distribuidos en el espacio tridimensional con órbitas más dinámicas
     this.emitters = [
       // Emisor 0: Textura Granular de Alta Frecuencia (Cian bioluminiscente)
       this._createEmitter({
         id: 0,
         type: 'granular',
         initialAngle: 0,
-        angularSpeed: 0.32,
-        baseRadius: 3.2,
-        elevation: 0.4,
+        angularSpeed: 0.45,
+        baseRadius: 2.8,
+        elevation: 0.6,
         color: '#22d3ee'
       }),
 
@@ -49,9 +49,9 @@ export class EnvironmentSound {
         id: 1,
         type: 'crystalline',
         initialAngle: Math.PI * 0.65,
-        angularSpeed: -0.28,
-        baseRadius: 3.8,
-        elevation: -0.5,
+        angularSpeed: -0.42,
+        baseRadius: 3.2,
+        elevation: -0.7,
         color: '#38bdf8'
       }),
 
@@ -60,9 +60,9 @@ export class EnvironmentSound {
         id: 2,
         type: 'sweep',
         initialAngle: Math.PI * 1.3,
-        angularSpeed: 0.22,
-        baseRadius: 3.4,
-        elevation: 0.8,
+        angularSpeed: 0.36,
+        baseRadius: 2.6,
+        elevation: 0.9,
         color: '#a5f3fc'
       }),
 
@@ -71,9 +71,9 @@ export class EnvironmentSound {
         id: 3,
         type: 'drone_burst',
         initialAngle: Math.PI * 1.85,
-        angularSpeed: -0.19,
-        baseRadius: 4.2,
-        elevation: -0.2,
+        angularSpeed: -0.32,
+        baseRadius: 3.5,
+        elevation: -0.4,
         color: '#06b6d4'
       })
     ];
@@ -181,22 +181,24 @@ export class EnvironmentSound {
     for (let i = 0; i < this.emitters.length; i++) {
       const em = this.emitters[i];
 
-      // Aplicar volumen atenuado del entorno
+      // Aplicar volumen atenuado del entorno con rampa inicial suave
       if (em.gain) {
-        em.gain.gain.setTargetAtTime(envMasterGain, now, 0.15);
+        // En los primeros 3 segundos el entorno emerge desde muy tenue
+        const initialFadeIn = Math.min(1.0, elapsedTime / 3.5);
+        em.gain.gain.setTargetAtTime(envMasterGain * initialFadeIn, now, 0.15);
       }
 
       // Actualizar ángulo en 360° (sentido horario y antihorario)
       em.currentAngle += em.angularSpeed * speedMult * 0.016;
 
-      // Radio actual en metros virtuales
-      const r = Math.max(1.5, em.baseRadius + radiusOffset + erraticJitter * (i % 2 === 0 ? 1 : -1));
+      // Radio actual en metros virtuales con mayor modulación de proximidad
+      const r = Math.max(1.1, em.baseRadius + radiusOffset + erraticJitter * (i % 2 === 0 ? 1.2 : -1.2));
       em.currentRadius = r;
 
       // Coordenadas 3D de audio HRTF
       // X = horizontal (izquierda/derecha), Y = elevación (arriba/abajo), Z = profundidad (frente/atrás)
       const x = r * Math.cos(em.currentAngle);
-      const elevationWobble = Math.sin(em.currentAngle * 2 + i) * 0.4;
+      const elevationWobble = Math.sin(em.currentAngle * 2.5 + i) * 0.8;
       const y = em.elevation + elevationWobble;
       const z = r * Math.sin(em.currentAngle);
 

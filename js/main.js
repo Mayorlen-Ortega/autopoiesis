@@ -6,13 +6,13 @@
  * ============================================================================
  */
 
-import { AudioEngine } from './audio/AudioEngine.js?v=20261123b';
-import { SystemSound } from './audio/SystemSound.js?v=20261123b';
-import { EnvironmentSound } from './audio/EnvironmentSound.js?v=20261123b';
-import { CanvasRenderer } from './visuals/CanvasRenderer.js?v=20261123b';
-import { SystemMembrane } from './visuals/SystemMembrane.js?v=20261123b';
-import { PerturbationField } from './visuals/PerturbationField.js?v=20261123b';
-import { TimelineManager } from './timeline/TimelineManager.js?v=20261123b';
+import { AudioEngine } from './audio/AudioEngine.js?v=20261123_spatial';
+import { SystemSound } from './audio/SystemSound.js?v=20261123_spatial';
+import { EnvironmentSound } from './audio/EnvironmentSound.js?v=20261123_spatial';
+import { CanvasRenderer } from './visuals/CanvasRenderer.js?v=20261123_spatial';
+import { SystemMembrane } from './visuals/SystemMembrane.js?v=20261123_spatial';
+import { PerturbationField } from './visuals/PerturbationField.js?v=20261123_spatial';
+import { TimelineManager } from './timeline/TimelineManager.js?v=20261123_spatial';
 
 class AutopoiesisApp {
   constructor() {

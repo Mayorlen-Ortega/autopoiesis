@@ -39,7 +39,7 @@ export class SystemSound {
     this.melodyGain = null;
     this.melodyNotes = [
       // Acto II: Autoproducción y Frontera (15s - 30s) — Notas largas y cálidas
-      { startTime: 15.6, freq: 220.00, duration: 4.8, gain: 0.28 }, // A3
+      { startTime: 15.6, freq: 220.00, duration: 3.8, gain: 0.28 }, // A3
       { startTime: 20.4, freq: 261.63, duration: 5.0, gain: 0.30 }, // C4
       { startTime: 25.2, freq: 329.63, duration: 5.0, gain: 0.32 }, // E4
 
@@ -70,7 +70,9 @@ export class SystemSound {
 
     this.outputGain = this.ctx.createGain();
     this.outputGain.gain.setValueAtTime(0.0001, now);
-    this.outputGain.gain.linearRampToValueAtTime(0.85, now + 1.5);
+    // Entrada paulatina suave para el sistema
+    this.outputGain.gain.exponentialRampToValueAtTime(0.25, now + 3.0);
+    this.outputGain.gain.linearRampToValueAtTime(0.85, now + 7.5);
 
     this.outputGain.connect(this.panner);
     this.panner.connect(this.engine.systemBus);
@@ -124,10 +126,30 @@ export class SystemSound {
     this.reorgGain.gain.setValueAtTime(0.4, now);
     this.reorgGain.connect(this.outputGain);
 
-    // Bus de melodía de organización (tonos largos estructurales)
+    // Bus de melodía de organización (tonos con reverberación y filtro etéreo)
     this.melodyGain = this.ctx.createGain();
     this.melodyGain.gain.setValueAtTime(1.0, now);
-    this.melodyGain.connect(this.outputGain);
+
+    // Cadena de efectos para la melodía: Filtro cálido + Reverb de espacio profundo
+    this.melodyFilter = this.ctx.createBiquadFilter();
+    this.melodyFilter.type = 'lowpass';
+    this.melodyFilter.frequency.setValueAtTime(850, now); // Timbre sedoso y cálido
+    this.melodyFilter.Q.setValueAtTime(1.2, now);
+
+    // Reverb convolutiva sintética (cola etérea de 3.2 segundos)
+    this.melodyReverb = this._createReverbNode(3.2, 2.4);
+    this.melodyWetGain = this.ctx.createGain();
+    this.melodyWetGain.gain.setValueAtTime(0.65, now); // Nivel de reverberación
+    this.melodyDryGain = this.ctx.createGain();
+    this.melodyDryGain.gain.setValueAtTime(0.70, now);
+
+    this.melodyGain.connect(this.melodyFilter);
+    this.melodyFilter.connect(this.melodyDryGain);
+    this.melodyDryGain.connect(this.outputGain);
+
+    this.melodyFilter.connect(this.melodyReverb);
+    this.melodyReverb.connect(this.melodyWetGain);
+    this.melodyWetGain.connect(this.outputGain);
 
     this.nextHeartbeatTime = now + 0.3;
     this.isStarted = true;
@@ -237,62 +259,74 @@ export class SystemSound {
   }
 
   /**
-   * Sintetiza una nota melódica larga y expresiva que representa al organismo
-   * tomando y manteniendo su estructura autopoiética.
+   * Genera una respuesta de impulso para crear una reverb etérea y profunda en Web Audio.
+   */
+  _createReverbNode(seconds = 3.0, decay = 2.0) {
+    const rate = this.ctx.sampleRate;
+    const length = Math.floor(rate * seconds);
+    const impulse = this.ctx.createBuffer(2, length, rate);
+    const left = impulse.getChannelData(0);
+    const right = impulse.getChannelData(1);
+
+    for (let i = 0; i < length; i++) {
+      const n = i / length;
+      const env = Math.exp(-n * decay);
+      left[i] = ((Math.random() * 2) - 1) * env;
+      right[i] = ((Math.random() * 2) - 1) * env;
+    }
+
+    const convolver = this.ctx.createConvolver();
+    convolver.buffer = impulse;
+    return convolver;
+  }
+
+  /**
+   * Sintetiza una nota melódica sutil, delicada y envuelta en reverberación
    */
   _synthesizeLongMelodicTone(note, now) {
     if (!this.ctx) return;
 
-    // Oscilador principal cálido (seno puro)
+    // Onda senoidal pura para timbre suave y cristalino (sin asperezas)
     const osc1 = this.ctx.createOscillator();
     osc1.type = 'sine';
     osc1.frequency.setValueAtTime(note.freq, now);
 
-    // Oscilador secundario (triángulo suave con sutil detune para cuerpo biológico)
+    // Oscilador armónico muy sutil a la octava superior (-12dB) para brillo delicado
     const osc2 = this.ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(note.freq, now);
-    osc2.detune.setValueAtTime(-4, now); // -4 cents
+    const osc2Gain = this.ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(note.freq * 2, now);
+    osc2Gain.gain.setValueAtTime(0.08, now);
+    osc2.connect(osc2Gain);
 
-    // LFO de vibrato orgánico sutil
+    // Vibrato orgánico muy lento y delicado
     const vibrato = this.ctx.createOscillator();
     const vibratoGain = this.ctx.createGain();
-    vibrato.frequency.setValueAtTime(4.0, now); // 4 Hz (respiración viva)
-    vibratoGain.gain.setValueAtTime(2.5, now);  // Modulación muy delicada
+    vibrato.frequency.setValueAtTime(3.2, now); // 3.2 Hz
+    vibratoGain.gain.setValueAtTime(1.8, now);
     vibrato.connect(vibratoGain);
     vibratoGain.connect(osc1.frequency);
-    vibratoGain.connect(osc2.frequency);
 
-    // Filtro pasa-bajo musical para envolver el tono en calidez
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1300, now);
-    filter.Q.setValueAtTime(1.8, now);
-
-    // Envolvente de ganancia con ataque suave, largo sostenido y caída expresiva
+    // Envolvente más breve y sutil: ataque suave de campana de cristal y caída etérea a la reverb
     const noteGain = this.ctx.createGain();
-    const attack = 0.8;
-    const release = 1.2;
-    const sustainTime = Math.max(0.2, note.duration - attack - release);
+    const attack = 0.45;
+    const hold = Math.max(0.2, note.duration * 0.45);
+    const decay = note.duration - attack - hold;
 
     noteGain.gain.setValueAtTime(0.0001, now);
-    // Ataque suave que emerge sin clics
     noteGain.gain.linearRampToValueAtTime(note.gain, now + attack);
-    // Sostenido prolongado representando la estructura que se mantiene
-    noteGain.gain.setValueAtTime(note.gain, now + attack + sustainTime);
-    // Caída exponencial suave
+    noteGain.gain.setValueAtTime(note.gain * 0.85, now + attack + hold);
     noteGain.gain.exponentialRampToValueAtTime(0.00001, now + note.duration);
 
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(noteGain);
+    osc1.connect(noteGain);
+    osc2Gain.connect(noteGain);
     noteGain.connect(this.melodyGain);
 
     vibrato.start(now);
     osc1.start(now);
     osc2.start(now);
 
-    const stopTime = now + note.duration + 0.15;
+    const stopTime = now + note.duration + 0.1;
     vibrato.stop(stopTime);
     osc1.stop(stopTime);
     osc2.stop(stopTime);
