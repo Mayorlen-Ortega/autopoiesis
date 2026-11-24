@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AUTOPOIESIS — Obra Audiovisual Generativa (60s)</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <!-- Canvas de Renderizado Principal -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Capa de Interfaz de Usuario (HUD) -->
+  <div id="ui-overlay" class="ui-layer">
+    <!-- Barra superior -->
+    <header class="hud-header">
+      <div class="hud-brand">
+        <span class="hud-dot"></span>
+        <span class="hud-title">AUTOPOIESIS</span>
+        <span id="act-badge" class="hud-act-badge">Acto I</span>
+      </div>
+      <div class="hud-controls">
+        <button id="btn-toggle-ui" class="hud-btn hud-btn-ghost"
+          title="Alternar visibilidad de interfaz para captura limpia (Atajo: H)">
+          <svg class="hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span class="btn-text">Ocultar UI (H)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Subtítulos poético-filosóficos de los actos -->
+    <main class="hud-center">
+      <div id="narrative-text" class="narrative-text"></div>
+    </main>
+
+    <!-- Barra inferior: Temporizador y Barra de Progreso Determinista -->
+    <footer class="hud-footer">
+      <div class="time-display">
+        <span id="time-current">00:00</span>
+        <span class="time-separator">/</span>
+        <span id="time-total">01:00</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-bar" class="progress-fill"></div>
+      </div>
+      <div class="spatial-badge">
+        <span class="badge-dot"></span>
+        <span>Audio 8D HRTF Activo</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Pantalla de Inicio / Desbloqueo de AudioContext -->
+  <div id="modal-start" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-tag">OBRA GENERATIVA DETERMINISTA (60.0s)</div>
+      <h1 class="modal-title">AUTOPOIESIS</h1>
+      <p class="modal-author">Humberto Maturana & Francisco Varela (1972)</p>
+
+      <div class="modal-description">
+        <p>Una exploración audiovisual en tiempo real sobre la <strong>clausura operacional</strong>, la
+          <strong>autodelimitación</strong> y el <strong>acoplamiento estructural</strong>.
+        </p>
+        <div class="headphone-notice">
+          <svg class="headphone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+            <path
+              d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
+            </path>
+          </svg>
+          <span><strong>Uso imprescindible de audífonos:</strong> Síntesis binaural espacial con algoritmo HRTF en
+            360°.</span>
+        </div>
+      </div>
+
+      <button id="btn-start" class="btn-primary">
+        <span class="btn-glow"></span>
+        <span class="btn-label">Iniciar Experiencia</span>
+      </button>
+
+      <div class="modal-meta">
+        <span>60 Segundos</span>
+        <span>•</span>
+        <span>Presiona [H] para Modo Grabación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Finalización -->
+  <div id="modal-end" class="modal-backdrop modal-hidden">
+    <div class="modal-card modal-card-minimal">
+      <div class="modal-tag">FIN DE LA EXPERIENCIA</div>
+      <h2 class="modal-title modal-title-sub">EXISTIR ES CREARSE</h2>
+      <p class="modal-quote">"El sistema se reorganiza sin perder su organización autopoiética."</p>
+      <button id="btn-restart" class="btn-primary btn-secondary">
+        <span>Reiniciar Experiencia</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Entry Point Modular -->
+  <script type="module" src="js/main.js?v=20261123b"></script>
+</body>
+
+</html>
