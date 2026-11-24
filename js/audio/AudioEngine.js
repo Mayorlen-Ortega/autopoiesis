@@ -146,15 +146,17 @@ export class AudioEngine {
   }
 
   /**
-   * Ejecuta el fade-out maestro determinista entre 57.0s y 60.0s.
+   * Ejecuta el fade-out maestro determinista progresivo hacia silencio absoluto.
    */
   fadeMaster(startFadeTime, targetEndTime) {
-    if (!this.isInitialized || !this.masterGain) return;
+    if (!this.isInitialized || !this.masterGain || !this.ctx) return;
     const currentGain = this.masterGain.gain.value;
     this.masterGain.gain.cancelScheduledValues(startFadeTime);
     this.masterGain.gain.setValueAtTime(Math.max(0.001, currentGain), startFadeTime);
-    // Rampa exponencial limpia que desciende a silencio absoluto
+    // Rampa exponencial suave hacia silencio absoluto en el segundo 60.0
     this.masterGain.gain.exponentialRampToValueAtTime(0.00001, targetEndTime);
+    // Corte a cero al momento del objetivo para garantizar silencio total
+    this.masterGain.gain.setValueAtTime(0, targetEndTime);
   }
 
   /**

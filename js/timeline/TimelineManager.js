@@ -141,12 +141,12 @@ export class TimelineManager {
       }
     }
 
-    // 4. Fade-out maestro determinista sincronizado (56.5s a 60.0s)
-    if (t >= 56.5 && !this.fadeTriggered) {
+    // 4. Fade-out maestro determinista sincronizado en los últimos 2.0 segundos (58.0s a 60.0s)
+    if (t >= 58.0 && !this.fadeTriggered) {
       this.fadeTriggered = true;
       if (this.engine && this.engine.ctx) {
         const audioNow = this.engine.ctx.currentTime;
-        const remainingSeconds = Math.max(0.1, 60.0 - t);
+        const remainingSeconds = Math.max(0.05, 60.0 - t);
         this.engine.fadeMaster(audioNow, audioNow + remainingSeconds);
       }
     }

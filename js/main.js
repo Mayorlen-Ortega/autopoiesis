@@ -148,9 +148,9 @@ class AutopoiesisApp {
     this.perturbations.draw(this.renderer.ctx);
     this.membrane.draw(this.renderer.ctx);
 
-    // 5. Oscurecimiento gradual previo al minuto (56.5s -> 60.0s)
-    if (elapsedTime >= 56.5) {
-      const fadeProgress = Math.min(1.0, (elapsedTime - 56.5) / 3.5);
+    // 5. Oscurecimiento gradual previo al minuto (58.0s -> 60.0s en los últimos dos segundos)
+    if (elapsedTime >= 58.0) {
+      const fadeProgress = Math.min(1.0, (elapsedTime - 58.0) / 2.0);
       this.renderer.drawFadeToBlack(fadeProgress);
     }
 
