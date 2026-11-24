@@ -68,7 +68,10 @@ export class AudioEngine {
     this.masterGain.gain.exponentialRampToValueAtTime(0.58, now + 5.0);
     this.masterGain.gain.linearRampToValueAtTime(0.92, now + 8.0);
 
-    // Bus del Plano Interior (Sistema / Identidad)
+    // Bus del Plano Interior (Sistema / Identidad) con control de atenuación para voz
+    this.systemDuckingGain = this.ctx.createGain();
+    this.systemDuckingGain.gain.setValueAtTime(1.0, now);
+
     this.systemBus = this.ctx.createGain();
     this.systemBus.gain.setValueAtTime(0.85, now);
 
@@ -77,10 +80,14 @@ export class AudioEngine {
     this.systemAnalyser.smoothingTimeConstant = 0.8;
     this.systemFreqData = new Uint8Array(this.systemAnalyser.frequencyBinCount);
 
-    this.systemBus.connect(this.systemAnalyser);
+    this.systemBus.connect(this.systemDuckingGain);
+    this.systemDuckingGain.connect(this.systemAnalyser);
     this.systemAnalyser.connect(this.masterGain);
 
-    // Bus del Plano Exterior (Entorno / Perturbaciones)
+    // Bus del Plano Exterior (Entorno / Perturbaciones) con control de atenuación para voz
+    this.envDuckingGain = this.ctx.createGain();
+    this.envDuckingGain.gain.setValueAtTime(1.0, now);
+
     this.environmentBus = this.ctx.createGain();
     this.environmentBus.gain.setValueAtTime(0.8, now);
 
@@ -89,7 +96,9 @@ export class AudioEngine {
     this.environmentAnalyser.smoothingTimeConstant = 0.75;
     this.envFreqData = new Uint8Array(this.environmentAnalyser.frequencyBinCount);
 
-    this.environmentBus.connect(this.environmentAnalyser);
+    this.environmentBus.connect(this.envDuckingGain);
+    this.envDuckingGain.connect(this.environmentAnalyser);
+    this.environmentAnalyser.connect(this.masterGain);
     this.environmentAnalyser.connect(this.masterGain);
 
     // Salida maestra a los altavoces / audífonos
@@ -145,6 +154,42 @@ export class AudioEngine {
     }
     const avg = sum / (len * 255);
     return avg;
+  }
+
+  /**
+   * Atenúa suavemente el volumen musical (ducking) durante la aparición de las voces
+   * y lo restaura de forma progresiva con fade-in y fade-out.
+   * @param {number} duration Duración total en segundos (default: 5.0s)
+   * @param {number} targetLevel Nivel al que desciende (ej: 0.38, ~60% de reducción)
+   */
+  duckForVoice(duration = 5.0, targetLevel = 0.38) {
+    if (!this.isInitialized || !this.ctx || !this.systemDuckingGain || !this.envDuckingGain) return;
+    const now = this.ctx.currentTime;
+    const fadeInTime = 1.0;
+    const fadeOutTime = 1.2;
+    const holdTime = Math.max(0.5, duration - fadeInTime - fadeOutTime);
+
+    // Cancelar valores previos programados
+    this.systemDuckingGain.gain.cancelScheduledValues(now);
+    this.envDuckingGain.gain.cancelScheduledValues(now);
+
+    const currentSys = Math.max(0.01, this.systemDuckingGain.gain.value);
+    const currentEnv = Math.max(0.01, this.envDuckingGain.gain.value);
+
+    this.systemDuckingGain.gain.setValueAtTime(currentSys, now);
+    this.envDuckingGain.gain.setValueAtTime(currentEnv, now);
+
+    // 1. Fade-in de la atenuación (baja suavemente para dar espacio a la voz)
+    this.systemDuckingGain.gain.exponentialRampToValueAtTime(targetLevel, now + fadeInTime);
+    this.envDuckingGain.gain.exponentialRampToValueAtTime(targetLevel * 0.75, now + fadeInTime);
+
+    // 2. Mantiene la atenuación durante el tiempo de la voz
+    this.systemDuckingGain.gain.setValueAtTime(targetLevel, now + fadeInTime + holdTime);
+    this.envDuckingGain.gain.setValueAtTime(targetLevel * 0.75, now + fadeInTime + holdTime);
+
+    // 3. Fade-out de la atenuación (el fondo musical vuelve a emerger a 1.0)
+    this.systemDuckingGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+    this.envDuckingGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
   }
 
   /**

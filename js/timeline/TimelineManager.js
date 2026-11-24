@@ -9,6 +9,7 @@
 
 export class TimelineManager {
   constructor(audioEngine) {
+    this.seenCues = new Set();
     this.engine = audioEngine;
 
     // Elementos del DOM
@@ -32,9 +33,10 @@ export class TimelineManager {
         startTime: 0.0,
         endTime: 15.0,
         text: '“Todo ser vivo es una red que se fabrica a sí misma.”',
-        textIn: 2.0,
-        textOut: 13.5,
-        isAuthor: false
+        textIn: 2.5,
+        textOut: 13.0,
+        isAuthor: false,
+        duckAudio: false
       },
       {
         id: 'ACT_II_CELL',
@@ -43,38 +45,42 @@ export class TimelineManager {
         endTime: 25.0,
         text: '“Traza su propia frontera para distinguir el adentro del afuera.”',
         textIn: 16.0,
-        textOut: 24.0,
-        isAuthor: false
+        textOut: 23.5,
+        isAuthor: false,
+        duckAudio: false
       },
       {
         id: 'ACT_II_PLANT',
         name: 'Acto II: Reino Vegetal (Planta)',
         startTime: 25.0,
         endTime: 36.0,
-        text: '“La red autopoiética engendra la forma: la planta fabrica su propia estructura.”',
+        text: '“Autoproducción”',
         textIn: 26.5,
         textOut: 34.5,
-        isAuthor: false
+        isAuthor: false,
+        duckAudio: true
       },
       {
         id: 'ACT_III_FISH',
         name: 'Acto III: Reino Animal (Pez)',
         startTime: 36.0,
         endTime: 46.5,
-        text: '“Locomoción y percepción sensorial: el pez navega en clausura operacional.”',
+        text: '“Clausura operacional”',
         textIn: 37.5,
         textOut: 45.0,
-        isAuthor: false
+        isAuthor: false,
+        duckAudio: true
       },
       {
         id: 'ACT_IV_BEETLE',
         name: 'Acto IV: Reino Artrópodo (Escarabajo)',
         startTime: 46.5,
         endTime: 53.5,
-        text: '“Exoesqueleto articulado: la vida preserva su identidad en cualquier escala biológica.”',
+        text: '“Conservación de la organización.”',
         textIn: 47.5,
         textOut: 52.8,
-        isAuthor: false
+        isAuthor: false,
+        duckAudio: true
       },
       {
         id: 'ACT_IV_CREDIT',
@@ -84,7 +90,8 @@ export class TimelineManager {
         text: 'AUTOPOIESIS — Humberto Maturana & Francisco Varela (1972)',
         textIn: 53.8,
         textOut: 56.5,
-        isAuthor: true
+        isAuthor: true,
+        duckAudio: false
       }
     ];
 
@@ -125,13 +132,24 @@ export class TimelineManager {
           }
         }
 
-        // Control de subtítulos con fade-in / fade-out
+        // ----- Texto del cue -------------------------------------------------
+        // Mostrar solo la primera vez que el cue entra en su ventana de texto.
+        // `seenCues` evita que el mismo cue se vuelva a activar mientras su
+        // intervalo sigue activo (esto era la causa de la triple aparición).
         if (t >= cue.textIn && t <= cue.textOut) {
-          if (this.activeCue !== cue.id) {
+          // Si aún no se mostró este cue, hacerlo ahora.
+          if (!this.seenCues.has(cue.id)) {
             this._showText(cue.text, cue.isAuthor);
+            this.seenCues.add(cue.id);
             this.activeCue = cue.id;
+
+            // Duck‑ing de la música mientras la voz está presente
+            if (cue.duckAudio && this.engine && this.engine.duckForVoice) {
+              this.engine.duckForVoice(10.0, 0.35);
+            }
           }
         } else {
+          // Salir del rango del texto: ocultar y limpiar estado.
           if (this.activeCue === cue.id) {
             this._hideText();
             this.activeCue = null;
@@ -161,6 +179,10 @@ export class TimelineManager {
 
   _showText(text, isAuthor = false) {
     if (!this.narrativeTextEl) return;
+    // Reset animation to avoid cumulative scaling on repeated shows
+    this.narrativeTextEl.classList.remove('visible');
+    // Force reflow so the removal takes effect before re‑adding
+    void this.narrativeTextEl.offsetWidth;
     this.narrativeTextEl.textContent = text;
     if (isAuthor) {
       this.narrativeTextEl.classList.add('author-credit');

@@ -185,7 +185,7 @@ html, body {
   opacity: 1;
   transform: translateY(0) scale(1);
   filter: blur(0px);
-  animation: etherealPulse 5s ease-in-out infinite alternate;
+      animation: etherealPulse 5s ease-in-out forwards;
 }
 
 @keyframes etherealPulse {
