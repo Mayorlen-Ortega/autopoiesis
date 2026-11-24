@@ -1,8 +1,0 @@
-# Reglas Permanentes de la Obra Generativa
-
-1. **Cero Suposiciones (Preguntar ante la duda):** Si existe ambigüedad sobre algún parámetro artístico, musical, temporal o técnico (como frecuencias, comportamiento de partículas, transiciones entre actos o textos en pantalla), detente y formula preguntas concretas antes de escribir o modificar código.
-2. **Validación Humana y Pruebas:** No asumas que el resultado audiovisual o el efecto espacial funciona correctamente por el solo hecho de compilar. Tras cada entrega o cambio significativo, indica explícitamente qué debe probar la autora en el navegador con audífonos (por ejemplo: verificar paneo 360°, ausencia de clics en transiciones o sincronía de membrana) y espera su confirmación antes de avanzar al siguiente bloque.
-3. **Reloj Determinista:** Toda animación y evento sonoro debe calcularse usando `audioCtx.currentTime` (duración máxima estricta: `60.0` segundos). Prohibido usar `setTimeout` o `setInterval` para lógica temporal.
-4. **Estética Visual:** Fondo siempre oscuro profundo (`#05030a` o similar). Prohibido usar fondos blancos o claros. Mantener alto contraste en tipografías y partículas bioluminiscentes.
-5. **Higiene de Audio:** Todo oscilador o nodo de ganancia debe iniciar y terminar con rampas exponenciales o lineales (`setTargetAtTime` / `exponentialRampToValueAtTime`) para evitar clics digitales.
-6. **Cero Dependencias Frágiles:** Usar exclusivamente JavaScript modular (ES6+), HTML5 Canvas y Web Audio API nativa, salvo aprobación explícita.
